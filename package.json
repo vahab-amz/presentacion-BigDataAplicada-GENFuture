@@ -1,0 +1,46 @@
+{
+  "name": "genfuture-deck",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GENFuture — keyboard-driven web presentation (Equipo 2 · Terapias)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "build:webpack": "next build --webpack",
+    "start": "next start",
+    "serve": "http-server out -p 4173 -c-1 --silent",
+    "preview": "npm run build && npm run serve",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "screenshots": "node scripts/screenshots.mjs",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build && npm run check:deck",
+    "check:deck": "node scripts/check-deck.mjs"
+  },
+  "dependencies": {
+    "d3-scale": "^4.0.2",
+    "d3-shape": "^3.2.0",
+    "motion": "^13.4.4",
+    "next": "16.2.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/d3-scale": "^4.0.9",
+    "@types/d3-shape": "^3.1.7",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "16.2.4",
+    "http-server": "^14.1.1",
+    "playwright": "^1.56.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.2"
+  }
+}

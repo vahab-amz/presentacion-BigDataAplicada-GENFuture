@@ -1,0 +1,245 @@
+@import 'tailwindcss';
+
+/* -------------------------------------------------------------------------- */
+/*  Fonts                                                                      */
+/*  Loaded and self-hosted by next/font in app/layout.tsx. `inline` is         */
+/*  required so the generated font utilities resolve the next/font variable.   */
+/* -------------------------------------------------------------------------- */
+
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Design tokens — dark theme is the default                                  */
+/*                                                                             */
+/*  The five data colours are semantic and identical on every slide:           */
+/*    demand  neutral grey   real R&D demand                                   */
+/*    onprem  red            capacity bought up front                          */
+/*    cloud   green/teal     capacity that follows demand                      */
+/*    warn    amber          queued work / risk                                */
+/*    accent  cool blue      one highlight colour, nothing else                */
+/*                                                                             */
+/*  The four chromatic tokens were validated with the dataviz palette          */
+/*  checker against both surfaces: lightness band, chroma floor, CVD           */
+/*  separation, normal-vision floor and contrast all pass.                     */
+/* -------------------------------------------------------------------------- */
+
+@theme {
+  --color-bg: oklch(0.19 0.022 258);
+  --color-bg-deep: oklch(0.145 0.02 258);
+  --color-panel: oklch(0.235 0.021 258);
+  --color-panel-raised: oklch(0.275 0.021 258);
+
+  --color-ink: oklch(0.965 0.005 250);
+  --color-ink-muted: oklch(0.755 0.012 250);
+  --color-ink-faint: oklch(0.6 0.012 250);
+
+  --color-rule: oklch(0.34 0.018 255);
+  --color-rule-strong: oklch(0.47 0.02 255);
+
+  --color-demand: oklch(0.7 0.015 255);
+  --color-onprem: oklch(0.57 0.19 27);
+  --color-cloud: oklch(0.62 0.13 170);
+  --color-warn: oklch(0.665 0.15 88);
+  --color-accent: oklch(0.6 0.15 256);
+
+  /* Type scale for the fixed 1920x1080 stage. Nothing here is responsive:
+     the whole stage is scaled by one transform, so px are stable. */
+  --text-micro: 24px;
+  --text-micro--line-height: 1.35;
+  --text-label: 28px;
+  --text-label--line-height: 1.35;
+  --text-body: 32px;
+  --text-body--line-height: 1.45;
+  --text-body-lg: 38px;
+  --text-body-lg--line-height: 1.4;
+  --text-lede: 44px;
+  --text-lede--line-height: 1.3;
+  --text-h3: 52px;
+  --text-h3--line-height: 1.2;
+  --text-h2: 64px;
+  --text-h2--line-height: 1.1;
+  --text-h1: 80px;
+  --text-h1--line-height: 1.06;
+  --text-hero: 104px;
+  --text-hero--line-height: 1.02;
+  --text-num: 132px;
+  --text-num--line-height: 1;
+  --text-num-lg: 176px;
+  --text-num-lg--line-height: 0.95;
+
+  --radius-card: 3px;
+}
+
+/* Light theme: warm off-white. Written unlayered so it always wins over the
+   values Tailwind emits into @layer theme. */
+:root[data-theme='light'] {
+  --color-bg: oklch(0.975 0.008 85);
+  --color-bg-deep: oklch(0.935 0.01 85);
+  --color-panel: oklch(0.995 0.004 85);
+  --color-panel-raised: oklch(1 0 0);
+
+  --color-ink: oklch(0.22 0.015 260);
+  --color-ink-muted: oklch(0.45 0.012 260);
+  --color-ink-faint: oklch(0.6 0.01 260);
+
+  --color-rule: oklch(0.87 0.008 85);
+  --color-rule-strong: oklch(0.74 0.01 85);
+
+  --color-demand: oklch(0.48 0.012 255);
+  --color-onprem: oklch(0.52 0.2 27);
+  --color-cloud: oklch(0.52 0.12 168);
+  --color-warn: oklch(0.62 0.15 70);
+  --color-accent: oklch(0.5 0.16 255);
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Base                                                                       */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: dark;
+  --stage-width: 1920;
+  --stage-height: 1080;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* The deck is driven from the keyboard, so focus must always be obvious. */
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Before hydration we do not yet know which slide the hash points at.
+   Hiding the stage for that one frame is cheaper than painting slide 1
+   and then jumping. The background and chrome stay visible. */
+html:not([data-deck-ready]) [data-deck-stage] {
+  opacity: 0;
+}
+
+[data-deck-stage] {
+  transition: opacity 120ms linear;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Range sliders (slide 4)                                                    */
+/*  Big enough to hit from the lectern, and obviously focusable.               */
+/* -------------------------------------------------------------------------- */
+
+@layer components {
+  .deck-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 36px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .deck-range::-webkit-slider-runnable-track {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .deck-range::-moz-range-track {
+    height: 10px;
+    border-radius: 999px;
+    background: var(--color-rule);
+  }
+
+  .deck-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 30px;
+    height: 30px;
+    margin-top: -10px;
+    border-radius: 999px;
+    background: var(--color-accent);
+    border: 4px solid var(--color-bg);
+    box-shadow: 0 0 0 1px var(--color-accent);
+  }
+
+  .deck-range::-moz-range-thumb {
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: var(--color-accent);
+    border: 4px solid var(--color-bg);
+    box-shadow: 0 0 0 1px var(--color-accent);
+  }
+
+  .deck-range:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 5px color-mix(in oklch, var(--color-accent) 45%, transparent);
+  }
+
+  .deck-range:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 5px color-mix(in oklch, var(--color-accent) 45%, transparent);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Print: one slide per landscape page, final step, for the PDF backup        */
+/* -------------------------------------------------------------------------- */
+
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    overflow: visible;
+    height: auto;
+  }
+
+  .print-page {
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .print-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* Backgrounds carry meaning in the charts, so keep them. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Reduced motion: the deck still works, it just stops moving. Transform-based
+   entrances collapse to fades (MotionConfig handles the motion components;
+   this covers plain CSS transitions). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
