@@ -8,6 +8,8 @@ import { ENTER_OFFSET, enterTransition, instantTransition } from '@/deck/motion-
 export type RevealProps = {
   /** The step from which this content is on screen. */
   at: number
+  /** The step from which it leaves again (exclusive); omit to stay. */
+  until?: number
   children: ReactNode
   className?: string
   style?: CSSProperties
@@ -35,10 +37,12 @@ const STAGGER_INTERVAL = 0.06
  * The element is always in the layout — only opacity and a small transform
  * change — so revealing something never shifts anything else, and stepping
  * backwards simply animates to the other state rather than rewinding a
- * timeline.
+ * timeline. With `until`, content leaves the same way it came: a cover title
+ * gives way to the slide's working title without anything moving.
  */
 export function Reveal({
   at,
+  until,
   children,
   className,
   style,
@@ -48,7 +52,7 @@ export function Reveal({
 }: RevealProps) {
   const { step, mode } = useSlideStep()
   const reduceMotion = useReducedMotion()
-  const visible = step >= at
+  const visible = step >= at && (until === undefined || step < until)
 
   const offset = reduceMotion ? OFFSETS.none : OFFSETS[from]
   const transition =

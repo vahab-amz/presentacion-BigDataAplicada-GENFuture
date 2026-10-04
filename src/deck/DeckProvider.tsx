@@ -10,10 +10,11 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { SLIDES, type SlideMeta } from '@/data/deck'
+import { APPENDIX, SLIDES, type SlideMeta } from '@/data/deck'
 import { useIsomorphicLayoutEffect } from '@/lib/use-isomorphic-layout-effect'
 import {
   START,
+  appendixOpenStep,
   clampPosition,
   formatHash,
   lastPosition,
@@ -21,12 +22,17 @@ import {
   parseHash,
   prevPosition,
   progressRatio,
+  paletteFor,
   samePosition,
+  stepAppendix,
   stepsOf,
+  type AppendixStep,
   type DeckPosition,
+  type Palette,
+  type Theme,
 } from './deck-state'
 
-export type Theme = 'dark' | 'light'
+export type { Theme } from './deck-state'
 
 const CHANNEL_NAME = 'genfuture-deck'
 const THEME_STORAGE_KEY = 'genfuture-deck-theme'
@@ -34,6 +40,8 @@ const THEME_STORAGE_KEY = 'genfuture-deck-theme'
 /** Shared across windows: what is projected. */
 type SharedState = {
   position: DeckPosition
+  /** Step inside the hidden appendix, or `null` while it is closed. */
+  appendixStep: AppendixStep
   blackout: boolean
   theme: Theme
 }
@@ -49,10 +57,22 @@ type ChannelMessage =
   | { kind: 'state'; from: string; state: SharedState }
   | { kind: 'hello'; from: string }
 
+/** What is actually on screen: a numbered slide, or the appendix. */
+export type DeckScreen = {
+  meta: SlideMeta
+  step: number
+  isAppendix: boolean
+}
+
 export type DeckContextValue = {
   slides: readonly SlideMeta[]
+  /** The numbered slide at `position`, even while the appendix covers it. */
   slide: SlideMeta
   position: DeckPosition
+  screen: DeckScreen
+  /** The palette the on-screen slide is drawn in. */
+  palette: Palette
+  appendixOpen: boolean
   stepCount: number
   progress: number
   /** True once the hash has been read; the stage is hidden until then. */
@@ -68,6 +88,8 @@ export type DeckContextValue = {
   goToSlide: (index: number) => void
   goHome: () => void
   goEnd: () => void
+  toggleAppendix: () => void
+  closeAppendix: () => void
   toggleBlackout: () => void
   toggleNotes: () => void
   toggleHelp: () => void
@@ -89,6 +111,7 @@ export function useDeck(): DeckContextValue {
 function sameShared(a: SharedState, b: SharedState): boolean {
   return (
     samePosition(a.position, b.position) &&
+    a.appendixStep === b.appendixStep &&
     a.blackout === b.blackout &&
     a.theme === b.theme
   )
@@ -115,6 +138,7 @@ export function DeckProvider({
   const slides = SLIDES
   const [shared, setShared] = useState<SharedState>({
     position: START,
+    appendixStep: null,
     blackout: false,
     theme: 'dark',
   })
@@ -195,9 +219,12 @@ export function DeckProvider({
         } satisfies ChannelMessage)
         return
       }
+      const remoteAppendix = message.state.appendixStep
       const nextState: SharedState = {
         ...message.state,
         position: clampPosition(message.state.position, slides),
+        appendixStep:
+          typeof remoteAppendix === 'number' ? stepAppendix(remoteAppendix, 0, APPENDIX) : null,
       }
       lastSynced.current = nextState
       setShared((prev) => (sameShared(prev, nextState) ? prev : nextState))
@@ -238,27 +265,54 @@ export function DeckProvider({
   }, [ready, shared.theme])
 
   /* --- Actions ------------------------------------------------------------ */
+  // Jumping anywhere in the numbered flow closes the appendix.
   const go = useCallback(
     (position: DeckPosition) => {
       setShared((prev) => {
         const target = clampPosition(position, slides)
-        return samePosition(prev.position, target) ? prev : { ...prev, position: target }
+        return samePosition(prev.position, target) && prev.appendixStep === null
+          ? prev
+          : { ...prev, position: target, appendixStep: null }
       })
     },
     [slides],
   )
 
+  // Inside the appendix the arrows step through it and never leave it.
   const next = useCallback(
-    () => setShared((prev) => ({ ...prev, position: nextPosition(prev.position, slides) })),
+    () =>
+      setShared((p) =>
+        p.appendixStep !== null
+          ? { ...p, appendixStep: stepAppendix(p.appendixStep, 1, APPENDIX) }
+          : { ...p, position: nextPosition(p.position, slides) },
+      ),
     [slides],
   )
   const prev = useCallback(
-    () => setShared((p) => ({ ...p, position: prevPosition(p.position, slides) })),
+    () =>
+      setShared((p) =>
+        p.appendixStep !== null
+          ? { ...p, appendixStep: stepAppendix(p.appendixStep, -1, APPENDIX) }
+          : { ...p, position: prevPosition(p.position, slides) },
+      ),
     [slides],
   )
   const goToSlide = useCallback((index: number) => go({ slide: index, step: 0 }), [go])
   const goHome = useCallback(() => go(START), [go])
   const goEnd = useCallback(() => go(lastPosition(slides)), [go, slides])
+
+  const toggleAppendix = useCallback(
+    () =>
+      setShared((p) => ({
+        ...p,
+        appendixStep: p.appendixStep === null ? appendixOpenStep(APPENDIX) : null,
+      })),
+    [],
+  )
+  const closeAppendix = useCallback(
+    () => setShared((p) => (p.appendixStep === null ? p : { ...p, appendixStep: null })),
+    [],
+  )
 
   const toggleBlackout = useCallback(
     () => setShared((p) => ({ ...p, blackout: !p.blackout })),
@@ -298,12 +352,24 @@ export function DeckProvider({
   }, [])
 
   const slide = slides[shared.position.slide] ?? slides[0]!
+  const appendixStep = shared.appendixStep
+
+  const screen = useMemo<DeckScreen>(
+    () =>
+      appendixStep === null
+        ? { meta: slide, step: shared.position.step, isAppendix: false }
+        : { meta: APPENDIX, step: appendixStep, isAppendix: true },
+    [appendixStep, slide, shared.position.step],
+  )
 
   const value = useMemo<DeckContextValue>(
     () => ({
       slides,
       slide,
       position: shared.position,
+      screen,
+      palette: paletteFor(screen.meta, shared.theme),
+      appendixOpen: appendixStep !== null,
       stepCount: stepsOf(slides, shared.position.slide),
       progress: progressRatio(shared.position, slides),
       ready,
@@ -318,6 +384,8 @@ export function DeckProvider({
       goToSlide,
       goHome,
       goEnd,
+      toggleAppendix,
+      closeAppendix,
       toggleBlackout,
       toggleNotes,
       toggleHelp,
@@ -330,6 +398,8 @@ export function DeckProvider({
     [
       slides,
       slide,
+      screen,
+      appendixStep,
       shared.position,
       shared.theme,
       shared.blackout,
@@ -343,6 +413,8 @@ export function DeckProvider({
       goToSlide,
       goHome,
       goEnd,
+      toggleAppendix,
+      closeAppendix,
       toggleBlackout,
       toggleNotes,
       toggleHelp,

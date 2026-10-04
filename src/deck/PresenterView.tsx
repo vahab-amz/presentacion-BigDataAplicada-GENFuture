@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { DECK_TITLE, SLIDE_COUNT, UI_TEXT } from '@/data/deck'
+import { APPENDIX, DECK_TITLE, SLIDE_COUNT, UI_TEXT, type SlideMeta } from '@/data/deck'
 import { useDeck } from './DeckProvider'
-import { nextPosition, samePosition } from './deck-state'
+import { HeroStill } from './HeroLayer'
+import { nextPosition, paletteFor, samePosition, type Theme } from './deck-state'
 import { SlideAt } from './SlideRenderer'
+import type { SlideRenderMode } from './slide-context'
 import { Stage } from './Stage'
 
 /**
@@ -44,18 +46,30 @@ function formatClock(seconds: number): string {
  */
 export function PresenterView() {
   const deck = useDeck()
-  const { position, slide, slides, stepCount } = deck
+  const { position, slide, slides, screen, theme } = deck
 
+  // Inside the appendix, "next" is its next reveal, then the spot A or Esc
+  // returns to. In the numbered flow it is simply the next reveal.
   const upcoming = nextPosition(position, slides)
-  const atEnd = samePosition(upcoming, position)
+  const preview: { meta: SlideMeta; step: number; heading: string } | null = screen.isAppendix
+    ? screen.step < APPENDIX.steps - 1
+      ? { meta: APPENDIX, step: screen.step + 1, heading: UI_TEXT.nextStep }
+      : { meta: slide, step: position.step, heading: UI_TEXT.appendixReturn }
+    : samePosition(upcoming, position)
+      ? null
+      : {
+          meta: slides[upcoming.slide] ?? slide,
+          step: upcoming.step,
+          heading: UI_TEXT.nextStep,
+        }
 
   const [resetKey, setResetKey] = useState(0)
   const totalSeconds = useElapsedSeconds([resetKey])
   const slideSeconds = useElapsedSeconds([resetKey, position.slide])
   const resetTimers = () => setResetKey((key) => key + 1)
 
-  const stepNote = slide.notes.byStep?.[position.step]
-  const bullets = slide.notes.bullets ?? []
+  const stepNote = screen.meta.notes.byStep?.[screen.step]
+  const bullets = screen.meta.notes.bullets ?? []
 
   return (
     <main className="flex h-screen w-screen flex-col overflow-hidden bg-bg-deep text-ink">
@@ -83,22 +97,15 @@ export function PresenterView() {
               a band of empty black. */}
           <div className="flex min-h-0 flex-1 items-center">
             <div className="aspect-video max-h-full w-full border border-rule">
-              <Stage gate={false}>
-                <SlideAt position={position} mode="live" />
-              </Stage>
+              <StagePreview meta={screen.meta} step={screen.step} mode="live" theme={theme} />
             </div>
           </div>
           <div className="mt-4 flex shrink-0 items-baseline justify-between text-base">
-            <p className="text-ink-muted">
-              <span className="tracking-[0.16em] text-ink-faint uppercase">
-                {UI_TEXT.presents}
-              </span>{' '}
-              {slide.presenter}
-            </p>
+            <p className="text-ink-muted">{screen.meta.name}</p>
             <p className="tabular-nums text-ink">
-              {position.slide + 1} / {SLIDE_COUNT}
+              {screen.isAppendix ? UI_TEXT.appendix : `${position.slide + 1} / ${SLIDE_COUNT}`}
               <span className="ml-4 text-ink-faint">
-                paso {position.step} / {stepCount - 1}
+                paso {screen.step} / {screen.meta.steps - 1}
               </span>
             </p>
           </div>
@@ -106,15 +113,13 @@ export function PresenterView() {
 
         <section className="flex min-h-0 flex-col p-6">
           <h2 className="shrink-0 text-sm tracking-[0.18em] text-ink-faint uppercase">
-            {atEnd ? 'Fin de la presentación' : UI_TEXT.nextStep}
+            {preview ? preview.heading : 'Fin de la presentación'}
           </h2>
           <div className="mt-3 aspect-video w-full shrink-0 border border-rule">
-            {atEnd ? (
-              <div className="flex h-full items-center justify-center text-ink-faint">—</div>
+            {preview ? (
+              <StagePreview meta={preview.meta} step={preview.step} mode="static" theme={theme} />
             ) : (
-              <Stage gate={false}>
-                <SlideAt position={upcoming} mode="static" />
-              </Stage>
+              <div className="flex h-full items-center justify-center text-ink-faint">—</div>
             )}
           </div>
 
@@ -158,6 +163,26 @@ export function PresenterView() {
         </section>
       </div>
     </main>
+  )
+}
+
+/** A slide in a small stage; the cover video appears as its poster still. */
+function StagePreview({
+  meta,
+  step,
+  mode,
+  theme,
+}: {
+  meta: SlideMeta
+  step: number
+  mode: SlideRenderMode
+  theme: Theme
+}) {
+  return (
+    <Stage gate={false} palette={paletteFor(meta, theme)}>
+      {meta.backdrop === 'hero' ? <HeroStill step={step} /> : null}
+      <SlideAt slide={meta} step={step} mode={mode} />
+    </Stage>
   )
 }
 

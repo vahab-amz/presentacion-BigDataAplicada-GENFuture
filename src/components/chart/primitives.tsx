@@ -282,13 +282,12 @@ export function FadeShape({
   )
 }
 
-/** A bar that grows from its baseline, animating scale only. */
+/** A bar that grows up from its bottom edge, animating scale only. */
 export function GrowBar({
   x,
   y,
   width,
   height,
-  baseline,
   visible,
   className,
   delay = 0,
@@ -298,7 +297,6 @@ export function GrowBar({
   y: number
   width: number
   height: number
-  baseline: number
   visible: boolean
   className: string
   delay?: number
@@ -316,7 +314,9 @@ export function GrowBar({
       height={Math.max(0, height)}
       rx={rx}
       className={className}
-      style={{ transformOrigin: `${x + width / 2}px ${baseline}px` }}
+      // Motion measures SVG origins against the element's own box
+      // (transform-box: fill-box), so "bottom edge" is originY 1, not pixels.
+      style={{ originY: 1 }}
       initial={false}
       animate={
         instant

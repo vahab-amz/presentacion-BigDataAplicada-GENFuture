@@ -15,6 +15,45 @@ export type DeckPosition = {
 
 export const START: DeckPosition = { slide: 0, step: 0 }
 
+/* -------------------------------------------------------------------------- */
+/*  Colour: the T theme, and the palette a slide is actually drawn in          */
+/* -------------------------------------------------------------------------- */
+
+export type Theme = 'dark' | 'light'
+
+/** `paper` is the cool white of slide 5; see globals.css. */
+export type Palette = 'dark' | 'light' | 'paper'
+
+/** The palette a slide pins regardless of the theme, if any. */
+export function pinnedPalette(slide: SlideMeta): Palette | undefined {
+  if (slide.surface === 'light') return 'paper'
+  if (slide.surface === 'dark') return 'dark'
+  return undefined
+}
+
+export function paletteFor(slide: SlideMeta, theme: Theme): Palette {
+  return pinnedPalette(slide) ?? theme
+}
+
+/* -------------------------------------------------------------------------- */
+/*  The hidden appendix                                                        */
+/*                                                                             */
+/*  It sits outside the numbered flow: opening it never touches the position,  */
+/*  so closing it returns exactly where the talk was. `null` means closed.     */
+/* -------------------------------------------------------------------------- */
+
+export type AppendixStep = number | null
+
+/** The appendix is a backup for questions, so it opens fully revealed. */
+export function appendixOpenStep(appendix: SlideMeta): number {
+  return Math.max(0, appendix.steps - 1)
+}
+
+/** Moves inside the appendix without ever leaving it. */
+export function stepAppendix(step: number, delta: number, appendix: SlideMeta): number {
+  return Math.min(Math.max(0, step + delta), Math.max(0, appendix.steps - 1))
+}
+
 export function stepsOf(slides: readonly SlideMeta[], slide: number): number {
   return slides[slide]?.steps ?? 1
 }

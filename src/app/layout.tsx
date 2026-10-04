@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Source_Serif_4 } from 'next/font/google'
+import { DECK_DESCRIPTION, DECK_TITLE } from '@/data/deck'
 import { MotionProvider } from '@/deck/MotionProvider'
 import './globals.css'
 
@@ -24,9 +25,8 @@ const sourceSerif = Source_Serif_4({
 })
 
 export const metadata: Metadata = {
-  title: 'GENFuture · Equipo 2 · Terapias',
-  description:
-    'Propuesta de plataforma cloud para GENFuture: carrera, caja, servicios, presupuesto a 3 años y riesgos.',
+  title: DECK_TITLE,
+  description: DECK_DESCRIPTION,
 }
 
 export const viewport: Viewport = {

@@ -5,8 +5,12 @@
 
 const NBSP = ' '
 
+/**
+ * `useGrouping: 'always'`: Spanish CLDR data leaves four-digit numbers
+ * ungrouped ("2000"), but the team's figures are written "2.000", "4.420".
+ */
 function formatter(options: Intl.NumberFormatOptions): Intl.NumberFormat {
-  return new Intl.NumberFormat('es-ES', options)
+  return new Intl.NumberFormat('es-ES', { useGrouping: 'always', ...options })
 }
 
 const integer = formatter({ maximumFractionDigits: 0 })

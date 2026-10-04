@@ -24,6 +24,11 @@
 /*  The four chromatic tokens were validated with the dataviz palette          */
 /*  checker against both surfaces: lightness band, chroma floor, CVD           */
 /*  separation, normal-vision floor and contrast all pass.                     */
+/*                                                                             */
+/*  Two more tokens colour the budget stack on slide 3 (cold storage, a muted  */
+/*  blue; databases, a neutral). Stacked with accent and cloud they pass the   */
+/*  adjacent CVD, normal-vision and contrast checks; they sit outside the      */
+/*  chroma floor on purpose, and every segment is labelled.                    */
 /* -------------------------------------------------------------------------- */
 
 @theme {
@@ -44,6 +49,28 @@
   --color-cloud: oklch(0.62 0.13 170);
   --color-warn: oklch(0.665 0.15 88);
   --color-accent: oklch(0.6 0.15 256);
+
+  --color-tier-cold: oklch(0.82 0.05 235);
+  --color-tier-db: oklch(0.53 0.012 255);
+
+  /* Alex's infographic (slide 5). Fixed brand colours, the same in every
+     palette: that slide is always drawn on the paper surface. */
+  --color-ig-navy: #0b2a4a;
+  --color-ig-body: #2b3b52;
+  --color-ig-blue: #0470b6;
+  --color-ig-steel: #04567e;
+  --color-ig-green: #389c52;
+  --color-ig-green-bright: #6cc27b;
+  --color-ig-track: #d3dde8;
+  --color-ig-rule: #d5dee8;
+  --color-ig-tint-blue: #e8f0f8;
+  --color-ig-tint-green: #e5f2e8;
+  --color-ig-tint-peach: #faf1e4;
+  --color-ig-sub-blue: #2f6a94;
+  --color-ig-sub-green: #247778;
+  --color-ig-sub-warm: #5e554c;
+  --color-ig-swoosh: #d2e3f3;
+  --color-ig-banner: #012a4e;
 
   /* Type scale for the fixed 1920x1080 stage. Nothing here is responsive:
      the whole stage is scaled by one transform, so px are stable. */
@@ -73,9 +100,42 @@
   --radius-card: 3px;
 }
 
-/* Light theme: warm off-white. Written unlayered so it always wins over the
-   values Tailwind emits into @layer theme. */
-:root[data-theme='light'] {
+/* -------------------------------------------------------------------------- */
+/*  Palettes                                                                   */
+/*                                                                             */
+/*  The T theme sets the root. Any element can pin its own palette with        */
+/*  `data-palette`: every slide wrapper, the letterbox and the chrome carry     */
+/*  one, so a slide keeps its colours while it cross-fades out, and the area   */
+/*  around the stage always matches the slide on it.                           */
+/*    dark   the default theme (repeated so it can be pinned inside light)     */
+/*    light  warm off-white: the T light theme                                 */
+/*    paper  cool white of Alex's infographic, for `surface: 'light'`          */
+/*  Written unlayered so they always win over Tailwind's @layer theme.         */
+/* -------------------------------------------------------------------------- */
+
+[data-palette='dark'] {
+  color-scheme: dark;
+  --color-bg: oklch(0.19 0.022 258);
+  --color-bg-deep: oklch(0.145 0.02 258);
+  --color-panel: oklch(0.235 0.021 258);
+  --color-panel-raised: oklch(0.275 0.021 258);
+  --color-ink: oklch(0.965 0.005 250);
+  --color-ink-muted: oklch(0.755 0.012 250);
+  --color-ink-faint: oklch(0.6 0.012 250);
+  --color-rule: oklch(0.34 0.018 255);
+  --color-rule-strong: oklch(0.47 0.02 255);
+  --color-demand: oklch(0.7 0.015 255);
+  --color-onprem: oklch(0.57 0.19 27);
+  --color-cloud: oklch(0.62 0.13 170);
+  --color-warn: oklch(0.665 0.15 88);
+  --color-accent: oklch(0.6 0.15 256);
+  --color-tier-cold: oklch(0.82 0.05 235);
+  --color-tier-db: oklch(0.53 0.012 255);
+}
+
+:root[data-theme='light'],
+[data-palette='light'] {
+  color-scheme: light;
   --color-bg: oklch(0.975 0.008 85);
   --color-bg-deep: oklch(0.935 0.01 85);
   --color-panel: oklch(0.995 0.004 85);
@@ -93,6 +153,28 @@
   --color-cloud: oklch(0.52 0.12 168);
   --color-warn: oklch(0.62 0.15 70);
   --color-accent: oklch(0.5 0.16 255);
+  --color-tier-cold: oklch(0.68 0.08 232);
+  --color-tier-db: oklch(0.64 0.008 255);
+}
+
+[data-palette='paper'] {
+  color-scheme: light;
+  --color-bg: #f7f9fb;
+  --color-bg-deep: #eef2f7;
+  --color-panel: #ffffff;
+  --color-panel-raised: #ffffff;
+  --color-ink: #0b2a4a;
+  --color-ink-muted: #3e5068;
+  --color-ink-faint: #66768b;
+  --color-rule: #dce3eb;
+  --color-rule-strong: #b9c5d2;
+  --color-demand: oklch(0.48 0.012 255);
+  --color-onprem: oklch(0.52 0.2 27);
+  --color-cloud: #389c52;
+  --color-warn: oklch(0.62 0.15 70);
+  --color-accent: #0470b6;
+  --color-tier-cold: oklch(0.68 0.08 232);
+  --color-tier-db: oklch(0.64 0.008 255);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -139,63 +221,6 @@ html:not([data-deck-ready]) [data-deck-stage] {
 
 [data-deck-stage] {
   transition: opacity 120ms linear;
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Range sliders (slide 4)                                                    */
-/*  Big enough to hit from the lectern, and obviously focusable.               */
-/* -------------------------------------------------------------------------- */
-
-@layer components {
-  .deck-range {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 36px;
-    background: transparent;
-    cursor: pointer;
-  }
-
-  .deck-range::-webkit-slider-runnable-track {
-    height: 10px;
-    border-radius: 999px;
-    background: var(--color-rule);
-  }
-
-  .deck-range::-moz-range-track {
-    height: 10px;
-    border-radius: 999px;
-    background: var(--color-rule);
-  }
-
-  .deck-range::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 30px;
-    height: 30px;
-    margin-top: -10px;
-    border-radius: 999px;
-    background: var(--color-accent);
-    border: 4px solid var(--color-bg);
-    box-shadow: 0 0 0 1px var(--color-accent);
-  }
-
-  .deck-range::-moz-range-thumb {
-    width: 30px;
-    height: 30px;
-    border-radius: 999px;
-    background: var(--color-accent);
-    border: 4px solid var(--color-bg);
-    box-shadow: 0 0 0 1px var(--color-accent);
-  }
-
-  .deck-range:focus-visible::-webkit-slider-thumb {
-    box-shadow: 0 0 0 5px color-mix(in oklch, var(--color-accent) 45%, transparent);
-  }
-
-  .deck-range:focus-visible::-moz-range-thumb {
-    box-shadow: 0 0 0 5px color-mix(in oklch, var(--color-accent) 45%, transparent);
-  }
 }
 
 /* -------------------------------------------------------------------------- */

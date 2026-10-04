@@ -15,8 +15,8 @@ import {
   createPlot,
 } from '@/components/chart/primitives'
 import { IllustrativeTag } from '@/components/ui/Tag'
-import { DEMAND_PROFILE, MONTH_LABELS } from '@/data/cost-model'
-import { SLIDE_3 } from '@/data/deck'
+import { DEMAND_PROFILE, MONTH_LABELS } from '@/data/demand-profile'
+import { SLIDE_CLOUD } from '@/data/deck'
 import { useSlideStep } from '@/deck/slide-context'
 import { Place, SlideFrame, SlideTitle } from './SlideFrame'
 
@@ -30,7 +30,7 @@ const PLOT = createPlot(CHART.width, CHART.height - CHART.headerHeight, {
   left: 130,
 })
 const Y_MAX = 2.6
-const CAPACITY = SLIDE_3.chart.capacityMultiple
+const CAPACITY = SLIDE_CLOUD.chart.capacityMultiple
 /** The cloud line is nudged up a few pixels so it reads as a second series
  *  riding on demand rather than hiding underneath it. */
 const CLOUD_OFFSET = 9
@@ -47,20 +47,25 @@ const Y_TICKS = [
 ]
 const X_TICKS = MONTH_LABELS.map((label, month) => ({ value: month, label }))
 
-export function Slide03Cloud() {
+/*
+ * States: 0 title and empty axes · 1 demand, then the bought capacity ·
+ * 2 idle money and queued work · 3 the cloud follows demand · 4 three AWS
+ * blocks · 5 the key frame · 6 KPIs.
+ */
+export function Slide2Cloud() {
   const { step } = useSlideStep()
 
   return (
     <SlideFrame>
       <Place top={0} width={1680}>
         <Reveal at={0} from="none">
-          <SlideTitle size="h2">{SLIDE_3.title}</SlideTitle>
+          <SlideTitle size="h2">{SLIDE_CLOUD.title}</SlideTitle>
         </Reveal>
       </Place>
 
       <Place top={84} width={1680}>
         <Reveal at={0} from="none">
-          <p className="text-label text-ink-muted">{SLIDE_3.subtitle}</p>
+          <p className="text-label text-ink-muted">{SLIDE_CLOUD.subtitle}</p>
         </Reveal>
       </Place>
 
@@ -74,10 +79,10 @@ export function Slide03Cloud() {
 
       <Place top={772} width={1680} height={100}>
         <div className="grid h-full grid-cols-3 gap-12">
-          {SLIDE_3.kpis.map((kpi, index) => (
+          {SLIDE_CLOUD.kpis.map((kpi, index) => (
             <Reveal
               key={kpi.label}
-              at={7}
+              at={6}
               index={index}
               className="h-full border-t-2 border-rule-strong pt-5"
             >
@@ -134,7 +139,7 @@ function DemandChart({ step }: { step: number }) {
 
   return (
     <ChartBlock
-      title={SLIDE_3.chart.title}
+      title={SLIDE_CLOUD.chart.title}
       tag={<IllustrativeTag />}
       width={CHART.width}
       height={CHART.height}
@@ -157,30 +162,30 @@ function DemandChart({ step }: { step: number }) {
 
         <PlotArea plot={PLOT}>
           <GridLinesY plot={PLOT} ticks={Y_TICKS} scale={yScale} />
-          <AxisY plot={PLOT} ticks={Y_TICKS} scale={yScale} label={SLIDE_3.chart.yLabel} />
+          <AxisY plot={PLOT} ticks={Y_TICKS} scale={yScale} label={SLIDE_CLOUD.chart.yLabel} />
           <AxisX plot={PLOT} ticks={X_TICKS} scale={xScale} />
 
-          {/* Step 3 — idle money below the line, queued work above it */}
+          {/* Step 2 — idle money below the line, queued work above it */}
           <g clipPath={`url(#${belowClip})`}>
-            <FadeShape d={paths.gap} visible={step >= 3} className="fill-onprem/20" />
+            <FadeShape d={paths.gap} visible={step >= 2} className="fill-onprem/20" />
           </g>
           <g clipPath={`url(#${aboveClip})`}>
-            <FadeShape d={paths.gap} visible={step >= 3} className="fill-warn/30" delay={0.08} />
+            <FadeShape d={paths.gap} visible={step >= 2} className="fill-warn/30" delay={0.08} />
           </g>
 
-          {/* Step 1 — what R&D actually asks for */}
+          {/* Step 1 — what R&D actually asks for, then what on-premise buys */}
           <DrawPath d={paths.demand} visible={step >= 1} className="stroke-demand" strokeWidth={4} />
-
-          {/* Step 2 — what on-premise buys */}
           <DrawPath
             d={paths.capacity}
-            visible={step >= 2}
+            visible={step >= 1}
             className="stroke-onprem"
             strokeWidth={4}
+            // Only on the way in: stepping back hides both lines together.
+            delay={step >= 1 ? SLIDE_CLOUD.chart.capacityDelay : 0}
           />
 
-          {/* Step 4 — the cloud follows the demand line */}
-          <DrawPath d={paths.cloud} visible={step >= 4} className="stroke-cloud" strokeWidth={5} />
+          {/* Step 3 — the cloud follows the demand line */}
+          <DrawPath d={paths.cloud} visible={step >= 3} className="stroke-cloud" strokeWidth={5} />
 
           {/* Direct labels: identity never depends on colour alone. */}
           <SeriesLabel
@@ -189,51 +194,52 @@ function DemandChart({ step }: { step: number }) {
             visible={step >= 1}
             className="fill-demand text-micro font-medium"
           >
-            {SLIDE_3.chart.demandLabel}
+            {SLIDE_CLOUD.chart.demandLabel}
           </SeriesLabel>
 
           <SeriesLabel
             x={PLOT.innerWidth - 4}
             y={capacityY - 24}
             anchor="end"
-            visible={step >= 2}
+            visible={step >= 1}
             className="fill-onprem text-micro font-medium"
+            delay={step >= 1 ? SLIDE_CLOUD.chart.capacityDelay + 0.3 : 0}
             halo
           >
-            {SLIDE_3.chart.capacityLabel}
+            {SLIDE_CLOUD.chart.capacityLabel}
           </SeriesLabel>
 
           <SeriesLabel
             x={xScale(5)}
             y={(capacityY + yScale(0.45)) / 2 + 8}
             anchor="middle"
-            visible={step >= 3}
+            visible={step >= 2}
             className="fill-onprem text-label font-semibold"
             halo
           >
-            {SLIDE_3.chart.idleLabel}
+            {SLIDE_CLOUD.chart.idleLabel}
           </SeriesLabel>
 
           <SeriesLabel
             x={xScale(3)}
             y={yScale(2.2) - 22}
             anchor="middle"
-            visible={step >= 3}
+            visible={step >= 2}
             className="fill-warn text-label font-semibold"
             delay={0.08}
             halo
           >
-            {SLIDE_3.chart.queueLabel}
+            {SLIDE_CLOUD.chart.queueLabel}
           </SeriesLabel>
 
           <SeriesLabel
             x={PLOT.innerWidth - 4}
             y={yScale(0.55) + 52}
             anchor="end"
-            visible={step >= 4}
+            visible={step >= 3}
             className="fill-cloud text-micro font-medium"
           >
-            {SLIDE_3.chart.cloudLabel}
+            {SLIDE_CLOUD.chart.cloudLabel}
           </SeriesLabel>
       </PlotArea>
     </ChartBlock>
@@ -250,19 +256,19 @@ const LOCK_ROW = 44
 function PlatformStack() {
   return (
     <div className="relative h-full">
-      {/* Step 6 — the lock caption and the frame that wraps all three blocks.
+      {/* Step 5 — the lock caption and the frame that wraps all three blocks.
           Both live outside the card flow, so nothing moves when they appear. */}
-      <Reveal at={6} from="none" className="absolute inset-x-0 top-0">
+      <Reveal at={5} from="none" className="absolute inset-x-0 top-0">
         <div className="flex items-center gap-3 whitespace-nowrap">
           <LockGlyph />
           <span className="text-micro font-medium tracking-[0.06em] text-accent uppercase">
-            {SLIDE_3.encryption}
+            {SLIDE_CLOUD.encryption}
           </span>
         </div>
       </Reveal>
 
       <Reveal
-        at={6}
+        at={5}
         from="none"
         className="absolute inset-x-0 bottom-0"
         style={{ top: LOCK_ROW }}
@@ -274,8 +280,8 @@ function PlatformStack() {
         className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-4"
         style={{ top: LOCK_ROW }}
       >
-        {SLIDE_3.platformCards.map((card, index) => (
-          <Reveal key={card.kicker} at={5} index={index} className="flex-1">
+        {SLIDE_CLOUD.platformCards.map((card, index) => (
+          <Reveal key={card.kicker} at={4} index={index} className="flex-1">
             <article className="flex h-full flex-col justify-center border-l-2 border-rule-strong bg-panel px-6 py-4">
               <p className="text-micro font-semibold tracking-[0.14em] text-cloud uppercase">
                 {card.kicker}

@@ -1,10 +1,18 @@
 # Medios de la diapositiva 1
 
-Coloca aquí los dos archivos opcionales del fondo de la portada:
+- `hero.mp4` — vídeo de portada, silenciado y en bucle (16:9). Debe ser H.264 +
+  yuv420p con `moov` al principio (faststart). `npm run media:hero` lo revisa y,
+  si ffmpeg está instalado, lo arregla y genera `hero.webm`.
+- `hero.webm` — opcional (VP9). Si existe, el deck lo prueba primero.
+- `hero-poster.jpg` — fotograma fijo: lo usan la ventana del ponente, `/print` y
+  el modo de movimiento reducido.
 
-- `hero.mp4` — vídeo silenciado en bucle (16:9; con 10–20 s sobra)
-- `hero-poster.jpg` — primer fotograma, que se ve mientras el vídeo carga
+Si no hay vídeo, o el navegador no puede reproducir ninguna fuente, la
+diapositiva 1 dibuja sola una doble hélice de puntos que gira despacio.
 
-Si falta alguno, o el navegador no puede reproducirlo, la diapositiva 1 dibuja
-sola una doble hélice de puntos que gira despacio. No hay que cambiar nada en el
-código: el deck funciona igual con vídeo y sin él.
+**Después de cambiar cualquier archivo de esta carpeta, `npm run build`.** El
+deck se sirve desde `out/`, que solo recoge `public/` al compilar;
+`npm run check:deck` falla si `out/` se ha quedado atrás.
+
+`why-cloud/` contiene los dos recortes fotográficos de la infografía de Alex
+(diapositiva 5).

@@ -15,9 +15,9 @@ const PREV_KEYS = new Set(['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'])
  * Global keyboard control.
  *
  * Presentation clickers send PageUp/PageDown, so those work everywhere. While a
- * slider or text field has focus the deck keys are ignored — otherwise dragging
- * the slide-4 sliders with the arrow keys would also change slide — except for
- * Escape, which gives focus back to the deck.
+ * text field has focus the deck keys are ignored, except for Escape, which gives
+ * focus back to the deck. The scenario buttons on slide 3 are mouse-only and
+ * blur themselves, so they never hold on to the keyboard.
  */
 export function useDeckKeys(): void {
   const deck = useDeck()
@@ -31,9 +31,12 @@ export function useDeckKeys(): void {
       const tag = target?.tagName ?? ''
       const isEditable = FORM_TAGS.has(tag) || target?.isContentEditable === true
 
+      // Escape unwinds one layer at a time: a focused field, then the notes or
+      // help, then the appendix (which returns to where the talk was).
       if (event.key === 'Escape') {
         if (isEditable) target?.blur()
-        deck.closeOverlays()
+        else if (deck.notesOpen || deck.helpOpen) deck.closeOverlays()
+        else if (deck.appendixOpen) deck.closeAppendix()
         event.preventDefault()
         return
       }
@@ -59,6 +62,10 @@ export function useDeckKeys(): void {
           break
         case 'End':
           deck.goEnd()
+          break
+        case 'a':
+        case 'A':
+          deck.toggleAppendix()
           break
         case 'f':
         case 'F':
@@ -86,7 +93,6 @@ export function useDeckKeys(): void {
           deck.toggleChrome()
           break
         case '?':
-
           deck.toggleHelp()
           break
         default: {

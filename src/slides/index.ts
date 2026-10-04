@@ -1,15 +1,18 @@
 import type { ComponentType } from 'react'
-import { Slide01Race } from './Slide01Race'
-import { Slide02Company } from './Slide02Company'
-import { Slide03Cloud } from './Slide03Cloud'
-import { Slide04Budget } from './Slide04Budget'
-import { Slide05Risks } from './Slide05Risks'
+import type { SlideId } from '@/data/deck'
+import { AppendixRisks } from './AppendixRisks'
+import { Slide1Company } from './Slide1Company'
+import { Slide2Cloud } from './Slide2Cloud'
+import { Slide3Budget } from './Slide3Budget'
+import { Slide4Hybrid } from './Slide4Hybrid'
+import { Slide5WhyCloud } from './Slide5WhyCloud'
 
-/** Keyed by `SlideMeta.id` in src/data/deck.ts. */
-export const SLIDE_COMPONENTS: Record<string, ComponentType> = {
-  race: Slide01Race,
-  company: Slide02Company,
-  cloud: Slide03Cloud,
-  budget: Slide04Budget,
-  risks: Slide05Risks,
+/** Keyed by `SlideMeta.id` in src/data/deck.ts; the type makes a missing slide a compile error. */
+export const SLIDE_COMPONENTS: Record<SlideId, ComponentType> = {
+  company: Slide1Company,
+  cloud: Slide2Cloud,
+  budget: Slide3Budget,
+  hybrid: Slide4Hybrid,
+  'why-cloud': Slide5WhyCloud,
+  risks: AppendixRisks,
 }

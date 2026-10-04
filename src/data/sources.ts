@@ -26,11 +26,6 @@ export const SOURCES = {
     url: 'https://cast.ai/blog/gpu-cloud-pricing/',
     about: 'Precios de GPU en la nube; subida del 15 % en H200 (enero 2026). Publica 12,29 $/h para p5.',
   },
-  spheron: {
-    label: 'Spheron',
-    url: 'https://www.spheron.network/blog/aws-h100-pricing-2026/',
-    about: 'Precio bajo demanda de AWS p5 tras la bajada de junio de 2025: 6,88 $ por GPU-hora.',
-  },
   awsHealthOmics: {
     label: 'AWS HealthOmics',
     url: 'https://aws.amazon.com/healthomics/',
@@ -50,11 +45,6 @@ export const SOURCES = {
     label: 'DataStorage',
     url: 'https://datastorage.com/articles/egress-fees-explained-the-complete-2026-guide-to-clouds-most-hated-cost/',
     about: 'Costes de salida de datos (egress) y su papel en la dependencia del proveedor.',
-  },
-  bioPharmaDive: {
-    label: 'BioPharma Dive',
-    url: 'https://www.biopharmadive.com/news/biotech-venture-capital-funding-2026-first-half/824881/',
-    about: 'Capital riesgo en biotecnología, primer semestre de 2026, por modalidad terapéutica.',
   },
 } as const satisfies Record<string, Source>
 

@@ -2,7 +2,7 @@
   "name": "genfuture-deck",
   "version": "1.0.0",
   "private": true,
-  "description": "GENFuture — keyboard-driven web presentation (Equipo 2 · Terapias)",
+  "description": "GENFuture — keyboard-driven web presentation (Big Data Aplicada · Equipo 2)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -15,11 +15,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "screenshots": "node scripts/screenshots.mjs",
+    "screenshots:all": "node scripts/screenshots.mjs --all",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build && npm run check:deck",
-    "check:deck": "node scripts/check-deck.mjs"
+    "check:deck": "node scripts/check-deck.mjs",
+    "media:hero": "node scripts/prepare-hero.mjs"
   },
   "dependencies": {
-    "d3-scale": "^4.0.2",
     "d3-shape": "^3.2.0",
     "motion": "^13.4.4",
     "next": "16.2.4",
@@ -29,7 +30,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@tailwindcss/postcss": "^4.3.3",
-    "@types/d3-scale": "^4.0.9",
     "@types/d3-shape": "^3.1.7",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",

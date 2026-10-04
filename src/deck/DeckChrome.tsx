@@ -2,19 +2,21 @@
 
 import { motion } from 'motion/react'
 import { SLIDE_COUNT, UI_TEXT } from '@/data/deck'
-import { SOURCES } from '@/data/sources'
+import { sourceLabels } from '@/data/sources'
 import { DURATION, EASE_OUT } from './motion-presets'
 import { useDeck } from './DeckProvider'
 
 /**
- * The standing furniture at the foot of every slide: who is speaking, where we
- * are, what the numbers came from, and a hairline that fills across the whole
- * deck rather than the current slide.
+ * The standing furniture at the foot of every slide: what the numbers came
+ * from, where we are, and a hairline that fills across the whole deck rather
+ * than the current slide. It takes the on-screen slide's palette from the
+ * stage, so it stays legible on the light slide in the dark theme too.
+ *
+ * The appendix is outside the numbered flow: it reads "Anexo" and the
+ * progress bar stays where the talk was.
  */
 export function DeckChrome() {
-  const { slide, position, progress, chromeVisible } = useDeck()
-
-  const sources = slide.sources.map((id) => SOURCES[id].label).join(' · ')
+  const { screen, position, progress, chromeVisible } = useDeck()
 
   return (
     <motion.div
@@ -25,18 +27,17 @@ export function DeckChrome() {
       aria-hidden={chromeVisible ? undefined : true}
     >
       <div className="flex items-baseline gap-10 px-[120px] pb-[34px] text-micro text-ink-faint">
-        <p className="shrink-0">
-          <span className="tracking-[0.16em] uppercase">{UI_TEXT.presents}</span>{' '}
-          <span className="text-ink-muted">{slide.presenter}</span>
-        </p>
-        <p className="flex-1 truncate text-center">{sources}</p>
-        <p className="shrink-0 tabular-nums">
-          {UI_TEXT.slideOf(position.slide + 1, SLIDE_COUNT)}
+        <p className="flex-1 truncate">{sourceLabels(screen.meta.sources)}</p>
+        <p className="shrink-0 tabular-nums" data-deck-counter="">
+          {screen.isAppendix
+            ? UI_TEXT.appendix
+            : UI_TEXT.slideOf(position.slide + 1, SLIDE_COUNT)}
         </p>
       </div>
 
       <div className="h-[4px] w-full bg-rule">
         <motion.div
+          data-deck-progress={progress.toFixed(4)}
           className="h-full origin-left bg-accent"
           initial={false}
           animate={{ scaleX: progress }}
@@ -50,10 +51,12 @@ export function DeckChrome() {
 
 /** Screen-reader announcement of the current position. */
 export function DeckLiveRegion() {
-  const { position } = useDeck()
+  const { screen, position } = useDeck()
   return (
     <div aria-live="polite" aria-atomic="true" className="sr-only">
-      {UI_TEXT.liveRegion(position.slide + 1, SLIDE_COUNT, position.step)}
+      {screen.isAppendix
+        ? UI_TEXT.liveRegionAppendix(screen.meta.name, screen.step)
+        : UI_TEXT.liveRegion(position.slide + 1, SLIDE_COUNT, position.step)}
     </div>
   )
 }

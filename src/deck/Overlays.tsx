@@ -38,9 +38,9 @@ export function Blackout() {
  * part of the composition.
  */
 export function NotesOverlay() {
-  const { notesOpen, closeOverlays, slide, position } = useDeck()
-  const stepNote = slide.notes.byStep?.[position.step]
-  const bullets = slide.notes.bullets ?? []
+  const { notesOpen, closeOverlays, screen } = useDeck()
+  const stepNote = screen.meta.notes.byStep?.[screen.step]
+  const bullets = screen.meta.notes.bullets ?? []
 
   return (
     <AnimatePresence>
@@ -55,7 +55,7 @@ export function NotesOverlay() {
           <div className="mx-auto max-w-[1400px]">
             <div className="mb-5 flex items-baseline justify-between">
               <h2 className="font-sans text-sm tracking-[0.2em] text-ink-faint uppercase">
-                {UI_TEXT.notes} — {slide.name}
+                {UI_TEXT.notes} — {screen.meta.name}
               </h2>
               <button
                 type="button"

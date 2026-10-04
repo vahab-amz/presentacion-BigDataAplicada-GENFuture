@@ -1,33 +1,23 @@
-'use client'
-
-import { useState } from 'react'
-import { DeckProvider } from '@/deck/DeckProvider'
-import { DeckView } from '@/deck/DeckView'
-import { PresenterView } from '@/deck/PresenterView'
-import { useDeckKeys } from '@/deck/useDeckKeys'
-import { useIsomorphicLayoutEffect } from '@/lib/use-isomorphic-layout-effect'
-
-export default function DeckPage() {
-  return (
-    <DeckProvider>
-      <DeckRoot />
-    </DeckProvider>
-  )
-}
+import { existsSync } from 'node:fs'
+import path from 'node:path'
+import { HERO_MEDIA } from '@/data/deck'
+import { DeckApp } from '@/deck/DeckApp'
+import type { HeroSource } from '@/deck/HeroLayer'
 
 /**
- * One route, two views. `?view=presenter` is read from `window.location`
- * rather than `useSearchParams` so the static export does not need a Suspense
- * boundary for a value that only matters in the browser.
+ * A server component, so it runs once, at build time: it lists only the cover
+ * video files that really are in `public/`. WebM goes first when present
+ * (smaller, and every Chromium decodes it); MP4 is the fallback. A missing
+ * file is simply left out, so the deck never requests something that 404s.
  */
-function DeckRoot() {
-  const [isPresenter, setIsPresenter] = useState(false)
-  useDeckKeys()
+function heroSources(): HeroSource[] {
+  const candidates: HeroSource[] = [
+    { src: HERO_MEDIA.webm, type: 'video/webm' },
+    { src: HERO_MEDIA.mp4, type: 'video/mp4' },
+  ]
+  return candidates.filter(({ src }) => existsSync(path.join(process.cwd(), 'public', src)))
+}
 
-  useIsomorphicLayoutEffect(() => {
-    const view = new URLSearchParams(window.location.search).get('view')
-    setIsPresenter(view === 'presenter')
-  }, [])
-
-  return isPresenter ? <PresenterView /> : <DeckView />
+export default function DeckPage() {
+  return <DeckApp heroSources={heroSources()} />
 }
